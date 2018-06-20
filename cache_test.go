@@ -1,7 +1,8 @@
-package imp
+package loki
 
 import (
 	"errors"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -231,6 +232,28 @@ func (suite *CacheTestSuite) TestFetch() {
 		value, err = cache.Get("key")
 		assert.Nil(t, value)
 		assert.Equal(t, ErrNotFound, err)
+	})
+
+	suite.Case("It locks properly and calls fallback function only once on concurrent fetch", func(t *testing.T) {
+		cache := NewCache(config)
+		concurrency := 3
+		var counter uint32
+
+		for i := 0; i < concurrency; i++ {
+			go cache.Fetch("key", func(string) (interface{}, error) {
+				atomic.AddUint32(&counter, 1)
+
+				time.Sleep(time.Millisecond)
+
+				return "value", nil
+			})
+		}
+
+		<-time.After(5 * time.Millisecond)
+
+		counterFinal := atomic.LoadUint32(&counter)
+
+		assert.Equal(t, uint32(1), counterFinal)
 	})
 }
 

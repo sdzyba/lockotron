@@ -1,4 +1,4 @@
-package imp
+package loki
 
 import (
 	"time"

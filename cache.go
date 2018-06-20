@@ -1,4 +1,4 @@
-package imp
+package loki
 
 import (
 	"errors"
@@ -11,6 +11,7 @@ var (
 )
 
 type Cache struct {
+	locker     *locker
 	mutex      sync.RWMutex
 	items      map[string]*item
 	defaultTTL time.Duration
@@ -18,6 +19,7 @@ type Cache struct {
 
 func NewCache(config *Config) *Cache {
 	c := &Cache{
+		locker:     newLocker(),
 		items:      make(map[string]*item),
 		defaultTTL: config.DefaultTTL,
 	}
@@ -82,23 +84,27 @@ func (c *Cache) DeleteExpired() {
 }
 
 func (c *Cache) fetch(key string, ttl time.Duration, fallbackFunc func(string) (interface{}, error)) (interface{}, error) {
-	c.mutex.Lock()
-	item, ok := c.items[key]
-	if ok {
-		c.mutex.Unlock()
-
-		return item.value, nil
+	value, err := c.Get(key)
+	if err == nil {
+		return value, nil
 	}
 
-	value, err := fallbackFunc(key)
-	if err != nil {
-		c.mutex.Unlock()
+	mutex := c.locker.obtain(key)
+	mutex.Lock()
+	defer mutex.Unlock()
+	defer c.locker.release(key)
 
+	value, err = c.Get(key)
+	if err == nil {
+		return value, nil
+	}
+
+	value, err = fallbackFunc(key)
+	if err != nil {
 		return nil, err
 	}
 
-	c.items[key] = newItem(value, ttl)
-	c.mutex.Unlock()
+	c.SetEx(key, ttl, value)
 
 	return value, nil
 }
