@@ -1,4 +1,4 @@
-package loki
+package lockotron
 
 import (
 	"sync"
