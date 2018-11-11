@@ -14,9 +14,5 @@ func newItem(value interface{}, ttl time.Duration) *item {
 }
 
 func (i *item) isExpirable() bool {
-	if i.ttl == int64(NoTTL) {
-		return false
-	}
-
-	return true
+	return i.ttl != int64(NoTTL)
 }

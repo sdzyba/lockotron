@@ -10,6 +10,8 @@ var (
 	ErrNotFound = errors.New("cached value not found")
 )
 
+type fallbackFunc func(string) (interface{}, error)
+
 type Cache struct {
 	locker     *locker
 	mutex      sync.RWMutex
@@ -57,12 +59,12 @@ func (c *Cache) Delete(key string) {
 	c.mutex.Unlock()
 }
 
-func (c *Cache) Fetch(key string, fallbackFunc func(string) (interface{}, error)) (interface{}, error) {
-	return c.fetch(key, c.defaultTTL, fallbackFunc)
+func (c *Cache) Fetch(key string, fallback fallbackFunc) (interface{}, error) {
+	return c.fetch(key, c.defaultTTL, fallback)
 }
 
-func (c *Cache) FetchEx(key string, ttl time.Duration, fallbackFunc func(string) (interface{}, error)) (interface{}, error) {
-	return c.fetch(key, ttl, fallbackFunc)
+func (c *Cache) FetchEx(key string, ttl time.Duration, fallback fallbackFunc) (interface{}, error) {
+	return c.fetch(key, ttl, fallback)
 }
 
 func (c *Cache) DeleteAll() {
@@ -83,7 +85,7 @@ func (c *Cache) DeleteExpired() {
 	c.mutex.Unlock()
 }
 
-func (c *Cache) fetch(key string, ttl time.Duration, fallbackFunc func(string) (interface{}, error)) (interface{}, error) {
+func (c *Cache) fetch(key string, ttl time.Duration, fallback fallbackFunc) (interface{}, error) {
 	value, err := c.Get(key)
 	if err == nil {
 		return value, nil
@@ -99,7 +101,7 @@ func (c *Cache) fetch(key string, ttl time.Duration, fallbackFunc func(string) (
 		return value, nil
 	}
 
-	value, err = fallbackFunc(key)
+	value, err = fallback(key)
 	if err != nil {
 		return nil, err
 	}
