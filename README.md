@@ -56,8 +56,12 @@ fmt.Println(value.(string))
 // Output: "newbar"
 ```
 
+## Fetch
 Concurrent calls of `Fetch()` are completely thread safe, meaning the fallback function will be called only once despite how many goroutines will try to fetch the value.
-First goroutines locks the access by the given key and proceeds dealing with the fallback function. All awaiting goroutines will received value that has been set once first goroutine unlocks the access.
+
+First goroutine locks the access by the given key and proceeds dealing with the fallback function. All awaiting goroutines will receive value that has been set once first goroutine unlocks the access.
+
 If value was already set, `Fetch()` behaves the same as `Get()`.
 
-Please refer to [tests](https://github.com/sdzyba/lockotron/blob/master/cache_test.go) to explore more examples.
+## More info
+Please refer to [tests](https://github.com/sdzyba/lockotron/blob/master/cache_test.go) to see more use cases.
