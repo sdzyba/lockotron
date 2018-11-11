@@ -130,6 +130,8 @@ func (c *Cache) fetch(key string, ttl time.Duration, fallback fallbackFunc) (int
 		return nil, err
 	}
 
+	c.SetEx(key, ttl, value)
+
 	return value, nil
 }
 
