@@ -45,7 +45,7 @@ func TestCache_Set(t *testing.T) {
 	})
 
 	t.Run("It doesn't expire the item if ttl has been elapsed but cleaner is disabled", func(t *testing.T) {
-		config.CleanupInterval = NoCleaner
+		config.CleanupInterval = NoCleanup
 		cache := NewCache(config)
 		cache.Set("key", "value")
 

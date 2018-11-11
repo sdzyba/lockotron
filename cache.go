@@ -28,7 +28,7 @@ func NewCache(config *Config) *Cache {
 		config: config,
 	}
 
-	if config.CleanupInterval != NoCleaner {
+	if config.CleanupInterval != NoCleanup {
 		c.ticker = time.NewTicker(config.CleanupInterval)
 
 		go func() {

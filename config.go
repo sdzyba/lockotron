@@ -6,7 +6,7 @@ import (
 
 const (
 	NoTTL     time.Duration = -1
-	NoCleaner time.Duration = -1
+	NoCleanup time.Duration = -1
 )
 
 type Config struct {
