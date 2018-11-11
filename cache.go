@@ -13,29 +13,53 @@ var (
 type fallbackFunc func(string) (interface{}, error)
 
 type Cache struct {
-	locker     *locker
-	mutex      sync.RWMutex
-	items      map[string]*item
-	defaultTTL time.Duration
+	locker   *locker
+	mutex    sync.RWMutex
+	items    map[string]*item
+	stopChan chan bool
+	ticker   *time.Ticker
+	config   *Config
 }
 
 func NewCache(config *Config) *Cache {
 	c := &Cache{
-		locker:     newLocker(),
-		items:      make(map[string]*item),
-		defaultTTL: config.DefaultTTL,
+		locker: newLocker(),
+		items:  make(map[string]*item),
+		config: config,
 	}
 
 	if config.CleanupInterval != NoCleaner {
-		cleaner := newCleaner(c, config.CleanupInterval)
-		go cleaner.Start()
+		c.ticker = time.NewTicker(config.CleanupInterval)
+
+		go func() {
+			for {
+				select {
+				case <-c.ticker.C:
+					c.DeleteExpired()
+				case <-c.stopChan:
+					c.ticker.Stop()
+
+					return
+				}
+			}
+		}()
 	}
 
 	return c
 }
 
+func (c *Cache) Close() error {
+	if c.stopChan == nil || c.ticker == nil {
+		return nil
+	}
+
+	close(c.stopChan)
+
+	return nil
+}
+
 func (c *Cache) Set(key string, value interface{}) {
-	c.set(key, c.defaultTTL, value)
+	c.set(key, c.config.DefaultTTL, value)
 }
 
 func (c *Cache) SetEx(key string, ttl time.Duration, value interface{}) {
@@ -60,7 +84,7 @@ func (c *Cache) Delete(key string) {
 }
 
 func (c *Cache) Fetch(key string, fallback fallbackFunc) (interface{}, error) {
-	return c.fetch(key, c.defaultTTL, fallback)
+	return c.fetch(key, c.config.DefaultTTL, fallback)
 }
 
 func (c *Cache) FetchEx(key string, ttl time.Duration, fallback fallbackFunc) (interface{}, error) {
@@ -105,8 +129,6 @@ func (c *Cache) fetch(key string, ttl time.Duration, fallback fallbackFunc) (int
 	if err != nil {
 		return nil, err
 	}
-
-	c.SetEx(key, ttl, value)
 
 	return value, nil
 }
