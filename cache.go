@@ -109,6 +109,14 @@ func (c *Cache) DeleteExpired() {
 	c.mutex.Unlock()
 }
 
+func (c *Cache) DeleteList(keys []string) {
+	c.mutex.Lock()
+	for _, key := range keys {
+		delete(c.items, key)
+	}
+	c.mutex.Unlock()
+}
+
 func (c *Cache) fetch(key string, ttl time.Duration, fallback fallbackFunc) (interface{}, error) {
 	value, err := c.Get(key)
 	if err == nil {

@@ -149,6 +149,31 @@ func TestCache_Delete(t *testing.T) {
 	})
 }
 
+func TestCache_DeleteList(t *testing.T) {
+	config := NewConfig()
+
+	t.Run("It deletes values with given key list", func(t *testing.T) {
+		cache := NewCache(config)
+		cache.Set("key", "value")
+		cache.Set("key1", "value1")
+		cache.Set("key2", "value2")
+
+		cache.DeleteList([]string{"key", "key2"})
+		value, err := cache.Get("key")
+		value1, err1 := cache.Get("key1")
+		value2, err2 := cache.Get("key2")
+
+		require.Nil(t, value)
+		require.Equal(t, ErrNotFound, err)
+
+		require.Nil(t, value2)
+		require.Equal(t, ErrNotFound, err2)
+
+		require.Nil(t, err1)
+		require.Equal(t, "value1", value1)
+	})
+}
+
 func TestCache_Fetch(t *testing.T) {
 	config := NewConfig()
 	config.DefaultTTL = 20 * time.Millisecond
