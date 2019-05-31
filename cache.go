@@ -2,8 +2,9 @@ package lockotron
 
 import (
 	"errors"
-	"sync"
 	"time"
+
+	"github.com/sasha-s/go-deadlock"
 )
 
 var (
@@ -14,7 +15,7 @@ type fallbackFunc func(string) (interface{}, error)
 
 type Cache struct {
 	locker   *locker
-	mutex    sync.RWMutex
+	mutex    deadlock.RWMutex
 	items    map[string]*item
 	stopChan chan bool
 	ticker   *time.Ticker
