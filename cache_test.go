@@ -103,6 +103,22 @@ func TestCache_Set(t *testing.T) {
 	})
 }
 
+func TestCache_SetList(t *testing.T) {
+	config := NewConfig()
+
+	t.Run("It sets list of values", func(t *testing.T) {
+		cache := NewCache(config)
+		cache.SetList(map[string]interface{}{
+			"key": "value",
+			"key1": "value1",
+		})
+
+		values := cache.GetList([]string{"key", "key1"})
+
+		require.Equal(t, []interface{}{"value", "value1"}, values)
+	})
+}
+
 func TestCache_GetList(t *testing.T) {
 	config := NewConfig()
 

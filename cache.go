@@ -62,6 +62,14 @@ func (c *Cache) Set(key string, value interface{}) {
 	c.set(key, c.config.DefaultTTL, value)
 }
 
+func (c *Cache) SetList(list map[string]interface{}) {
+	c.mutex.Lock()
+	for key, value := range list {
+		c.items[key] = newItem(value, c.config.DefaultTTL)
+	}
+	c.mutex.Unlock()
+}
+
 func (c *Cache) SetEx(key string, ttl time.Duration, value interface{}) {
 	c.set(key, ttl, value)
 }
