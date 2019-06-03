@@ -106,7 +106,7 @@ func TestCache_Set(t *testing.T) {
 func TestCache_GetList(t *testing.T) {
 	config := NewConfig()
 
-	t.Run("Returns values for provided keys", func(t *testing.T) {
+	t.Run("It returns values for provided keys", func(t *testing.T) {
 		cache := NewCache(config)
 		cache.Set("key", "value")
 		cache.Set("key1", "value1")
@@ -117,6 +117,15 @@ func TestCache_GetList(t *testing.T) {
 
 		require.Equal(t, []interface{}{"value", "value2"}, values1)
 		require.Equal(t, []interface{}{"value", "value1", "value2"}, values2)
+	})
+
+	t.Run("It skips missing items", func(t *testing.T) {
+		cache := NewCache(config)
+		cache.Set("key1", "value1")
+
+		values := cache.GetList([]string{"key"})
+
+		require.Equal(t, []interface{}{}, values)
 	})
 }
 
