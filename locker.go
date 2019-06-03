@@ -1,23 +1,23 @@
 package lockotron
 
 import (
-	"github.com/sasha-s/go-deadlock"
+	"sync"
 )
 
 type locker struct {
-	mutex        deadlock.Mutex
-	mutexesByKey map[string]*deadlock.Mutex
+	mutex        sync.Mutex
+	mutexesByKey map[string]*sync.Mutex
 }
 
 func newLocker() *locker {
-	return &locker{mutexesByKey: make(map[string]*deadlock.Mutex)}
+	return &locker{mutexesByKey: make(map[string]*sync.Mutex)}
 }
 
-func (l *locker) obtain(key string) *deadlock.Mutex {
+func (l *locker) obtain(key string) *sync.Mutex {
 	l.mutex.Lock()
 	mutex, ok := l.mutexesByKey[key]
 	if !ok {
-		mutex = &deadlock.Mutex{}
+		mutex = &sync.Mutex{}
 		l.mutexesByKey[key] = mutex
 	}
 	l.mutex.Unlock()

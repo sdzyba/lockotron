@@ -2,9 +2,8 @@ package lockotron
 
 import (
 	"errors"
+	"sync"
 	"time"
-
-	"github.com/sasha-s/go-deadlock"
 )
 
 var (
@@ -15,7 +14,7 @@ type fallbackFunc func(string) (interface{}, error)
 
 type Cache struct {
 	locker   *locker
-	mutex    deadlock.RWMutex
+	mutex    sync.RWMutex
 	items    map[string]*item
 	stopChan chan bool
 	ticker   *time.Ticker
@@ -148,4 +147,8 @@ func (c *Cache) set(key string, ttl time.Duration, value interface{}) {
 	c.mutex.Lock()
 	c.items[key] = newItem(value, ttl)
 	c.mutex.Unlock()
+}
+
+func IsNotFoundErr(err error) bool {
+	return ErrNotFound == err
 }
