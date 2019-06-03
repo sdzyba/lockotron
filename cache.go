@@ -77,6 +77,21 @@ func (c *Cache) Get(key string) (interface{}, error) {
 	return nil, ErrNotFound
 }
 
+func (c *Cache) GetList(keys []string) []interface{} {
+	values := make([]interface{}, 0, len(keys))
+
+	c.mutex.RLock()
+	for _, key := range keys {
+		item, ok := c.items[key]
+		if ok {
+			values = append(values, item.value)
+		}
+	}
+	c.mutex.RUnlock()
+
+	return values
+}
+
 func (c *Cache) Delete(key string) {
 	c.mutex.Lock()
 	delete(c.items, key)

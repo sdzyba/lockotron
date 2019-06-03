@@ -103,6 +103,23 @@ func TestCache_Set(t *testing.T) {
 	})
 }
 
+func TestCache_GetList(t *testing.T) {
+	config := NewConfig()
+
+	t.Run("Returns values for provided keys", func(t *testing.T) {
+		cache := NewCache(config)
+		cache.Set("key", "value")
+		cache.Set("key1", "value1")
+		cache.Set("key2", "value2")
+
+		values1 := cache.GetList([]string{"key", "key2"})
+		values2 := cache.GetList([]string{"key", "key1", "key2"})
+
+		require.Equal(t, []interface{}{"value", "value2"}, values1)
+		require.Equal(t, []interface{}{"value", "value1", "value2"}, values2)
+	})
+}
+
 func TestCache_SetEx(t *testing.T) {
 	config := NewConfig()
 	config.CleanupInterval = 1 * time.Millisecond
