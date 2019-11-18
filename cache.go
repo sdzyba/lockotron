@@ -10,8 +10,6 @@ var (
 	ErrNotFound = errors.New("cached value not found")
 )
 
-type fallbackFunc func(string) (interface{}, error)
-
 type Cache struct {
 	locker   *locker
 	mutex    sync.RWMutex
@@ -106,11 +104,11 @@ func (c *Cache) Delete(key string) {
 	c.mutex.Unlock()
 }
 
-func (c *Cache) Fetch(key string, fallback fallbackFunc) (interface{}, error) {
+func (c *Cache) Fetch(key string, fallback func(string) (interface{}, error)) (interface{}, error) {
 	return c.fetch(key, c.config.DefaultTTL, fallback)
 }
 
-func (c *Cache) FetchEx(key string, ttl time.Duration, fallback fallbackFunc) (interface{}, error) {
+func (c *Cache) FetchEx(key string, ttl time.Duration, fallback func(string) (interface{}, error)) (interface{}, error) {
 	return c.fetch(key, ttl, fallback)
 }
 
@@ -140,7 +138,7 @@ func (c *Cache) DeleteList(keys []string) {
 	c.mutex.Unlock()
 }
 
-func (c *Cache) fetch(key string, ttl time.Duration, fallback fallbackFunc) (interface{}, error) {
+func (c *Cache) fetch(key string, ttl time.Duration, fallback func(string) (interface{}, error)) (interface{}, error) {
 	value, err := c.Get(key)
 	if err == nil {
 		return value, nil
